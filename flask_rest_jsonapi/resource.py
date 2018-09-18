@@ -129,7 +129,7 @@ class Resource(MethodView):
                 return self.schema
             else:
                 pass # raise error?
-        except ValueError:
+        except TypeError:
             return self.schema(arg)
 
 
