@@ -17,7 +17,8 @@ class QueryStringManager(object):
         'fields',
         'sort',
         'include',
-        'q'
+        'q',
+        'group'
     )
 
     def __init__(self, querystring):
@@ -64,6 +65,16 @@ class QueryStringManager(object):
         :return dict: dict of managed querystring parameter
         """
         return {key: value for (key, value) in self.qs.items() if key.startswith(self.MANAGED_KEYS)}
+
+    @property
+    def grouping(self):
+        """Return group fields from query string.
+
+        :return list: group information
+        """
+        groups = self.qs.get('group')
+        if groups is not None:
+            return groups.split(",")
 
     @property
     def filters(self):
