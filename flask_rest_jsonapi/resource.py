@@ -124,9 +124,12 @@ class Resource(MethodView):
     Here arg is either the result from get_collection/get_object, or the parsed json of a post/patch/put
     '''
     def get_schema(self, arg=None):
-        if issubclass(self.schema, SchemaABC):
-            return self.schema
-        else:
+        try:
+            if issubclass(self.schema, SchemaABC):
+                return self.schema
+            else:
+                pass # raise error?
+        except ValueError:
             return self.schema(arg)
 
 
