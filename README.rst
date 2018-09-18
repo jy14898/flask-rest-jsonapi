@@ -15,7 +15,7 @@ Flask-REST-JSONAPI is a flask extension for building REST APIs. It combines the 
 
 Plan
 ====
-1. Allow for dynamic schemas, by having references to them by functions instead of classes. This allows for both styles of fixed class and dynamically generated based on an object.
+1. Allow for dynamic schemas, by having references to them by functions instead of classes. This allows for both styles of fixed class and dynamically generated based on an object. I think I wont allow nested schemas/relationships to be dynamic, because they can just be decided when the parent schema is being decided
 2. Allow for the routes I wanted originally. Like blackboard/ARTICLE/documents
 
 
