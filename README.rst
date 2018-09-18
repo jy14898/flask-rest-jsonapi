@@ -13,6 +13,12 @@ Flask-REST-JSONAPI
 
 Flask-REST-JSONAPI is a flask extension for building REST APIs. It combines the power of `Flask-Restless <https://flask-restless.readthedocs.io/en/stable/>`_ and the flexibility of `Flask-RESTful <http://flask-restful-cn.readthedocs.io/en/0.3.5/a>`_ around a strong specification `JSONAPI 1.0 <http://jsonapi.org/>`_. This framework is designed to quickly build REST APIs and fit the complexity of real life projects with legacy data and multiple data storages.
 
+Plan
+====
+1. Allow for dynamic schemas, by having references to them by functions instead of classes. This allows for both styles of fixed class and dynamically generated based on an object.
+2. Allow for the routes I wanted originally. Like blackboard/ARTICLE/documents
+
+
 Install
 =======
 
