@@ -331,7 +331,7 @@ def get_object_mock():
 def test_add_pagination_links(app):
     with app.app_context():
         qs = {'page[number]': '2', 'page[size]': '10'}
-        qsm = QSManager(qs, None)
+        qsm = QSManager(qs)
         pagination_dict = dict()
         add_pagination_links(pagination_dict, 43, qsm, str())
         last_page_dict = parse_qs(pagination_dict['links']['last'][1:])
@@ -386,12 +386,11 @@ def test_json_api_exception():
 
 def test_query_string_manager(person_schema):
     query_string = {'page[slumber]': '3'}
-    qsm = QSManager(query_string, person_schema)
+    qsm = QSManager(query_string)
     with pytest.raises(BadRequest):
         qsm.pagination
     qsm.qs['sort'] = 'computers'
-    with pytest.raises(InvalidSort):
-        qsm.sorting
+    assert qsm.sorting == [{'field': 'computers', 'order':'asc'}]
 
 
 def test_resource(app, person_model, person_schema, session, monkeypatch):
@@ -427,7 +426,7 @@ def test_resource(app, person_model, person_schema, session, monkeypatch):
 
 def test_compute_schema(person_schema):
     query_string = {'page[number]': '3', 'fields[person]': list()}
-    qsm = QSManager(query_string, person_schema)
+    qsm = QSManager(query_string)
     with pytest.raises(InvalidInclude):
         flask_rest_jsonapi.schema.compute_schema(person_schema, dict(), qsm, ['id'])
     flask_rest_jsonapi.schema.compute_schema(person_schema, dict(only=list()), qsm, list())
@@ -808,7 +807,7 @@ def test_get_list_invalid_fields(client, register_routes):
     with client:
         querystring = urlencode({'fields[person]': 'error'})
         response = client.get('/persons' + '?' + querystring, content_type='application/vnd.api+json')
-        assert response.status_code == 400
+        assert response.status_code == 200 # now allow any fields to be named
 
 
 def test_get_list_invalid_include(client, register_routes):
@@ -1536,7 +1535,7 @@ def test_base_data_layer():
 
 def test_qs_manager():
     with pytest.raises(ValueError):
-        QSManager([], None)
+        QSManager([])
 
 
 def test_api(app, person_list):

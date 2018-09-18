@@ -11,6 +11,8 @@ from flask.views import MethodView, MethodViewType
 from marshmallow_jsonapi.exceptions import IncorrectTypeError
 from marshmallow import ValidationError
 
+from marshmallow.base import SchemaABC
+
 from flask_rest_jsonapi.errors import jsonapi_errors
 from flask_rest_jsonapi.querystring import QueryStringManager as QSManager
 from flask_rest_jsonapi.pagination import add_pagination_links
@@ -118,6 +120,16 @@ class Resource(MethodView):
 
         return make_response(jsonify(data), status_code, headers)
 
+    '''
+    Here arg is either the result from get_collection/get_object, or the parsed json of a post/patch/put
+    '''
+    def get_schema(self, arg=None):
+        if issubclass(self.schema, SchemaABC):
+            return self.schema
+        else:
+            return self.schema(arg)
+
+
 
 class ResourceList(with_metaclass(ResourceMeta, Resource)):
     """Base class of a resource list manager"""
@@ -127,14 +139,14 @@ class ResourceList(with_metaclass(ResourceMeta, Resource)):
         """Retrieve a collection of objects"""
         self.before_get(args, kwargs)
 
-        qs = QSManager(request.args, self.schema)
+        qs = QSManager(request.args)
 
         objects_count, objects = self.get_collection(qs, kwargs)
 
         schema_kwargs = getattr(self, 'get_schema_kwargs', dict())
         schema_kwargs.update({'many': True})
 
-        schema = compute_schema(self.schema,
+        schema = compute_schema(self.get_schema(objects),
                                 schema_kwargs,
                                 qs,
                                 qs.include)
@@ -158,9 +170,9 @@ class ResourceList(with_metaclass(ResourceMeta, Resource)):
         """Create an object"""
         json_data = request.get_json() or {}
 
-        qs = QSManager(request.args, self.schema)
+        qs = QSManager(request.args)
 
-        schema = compute_schema(self.schema,
+        schema = compute_schema(self.get_schema(json_data),
                                 getattr(self, 'post_schema_kwargs', dict()),
                                 qs,
                                 qs.include)
@@ -232,11 +244,11 @@ class ResourceDetail(with_metaclass(ResourceMeta, Resource)):
         """Get object details"""
         self.before_get(args, kwargs)
 
-        qs = QSManager(request.args, self.schema)
+        qs = QSManager(request.args)
 
         obj = self.get_object(kwargs, qs)
 
-        schema = compute_schema(self.schema,
+        schema = compute_schema(self.get_schema(obj),
                                 getattr(self, 'get_schema_kwargs', dict()),
                                 qs,
                                 qs.include)
@@ -252,11 +264,11 @@ class ResourceDetail(with_metaclass(ResourceMeta, Resource)):
         """Update an object"""
         json_data = request.get_json() or {}
 
-        qs = QSManager(request.args, self.schema)
+        qs = QSManager(request.args)
         schema_kwargs = getattr(self, 'patch_schema_kwargs', dict())
         schema_kwargs.update({'partial': True})
 
-        schema = compute_schema(self.schema,
+        schema = compute_schema(self.get_schema(json_data),
                                 schema_kwargs,
                                 qs,
                                 qs.include)
@@ -350,6 +362,10 @@ class ResourceDetail(with_metaclass(ResourceMeta, Resource)):
         self._data_layer.delete_object(obj, kwargs)
 
 
+'''
+Currently relationship resources haven't been updated to use dynamic schemas
+'''
+
 class ResourceRelationship(with_metaclass(ResourceMeta, Resource)):
     """Base class of a resource relationship manager"""
 
@@ -369,7 +385,7 @@ class ResourceRelationship(with_metaclass(ResourceMeta, Resource)):
                             'related': self.schema._declared_fields[relationship_field].get_related_url(obj)},
                   'data': data}
 
-        qs = QSManager(request.args, self.schema)
+        qs = QSManager(request.args)
         if qs.include:
             schema = compute_schema(self.schema, dict(), qs, qs.include)
 

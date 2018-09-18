@@ -7,8 +7,6 @@ import json
 from flask import current_app
 
 from flask_rest_jsonapi.exceptions import BadRequest, InvalidFilters, InvalidSort, InvalidField, InvalidInclude
-from flask_rest_jsonapi.schema import get_model_field, get_relationships, get_schema_from_type
-
 
 class QueryStringManager(object):
     """Querystring parser according to jsonapi reference"""
@@ -22,7 +20,7 @@ class QueryStringManager(object):
         'q'
     )
 
-    def __init__(self, querystring, schema):
+    def __init__(self, querystring):
         """Initialization instance
 
         :param dict querystring: query string dict from request.args
@@ -31,7 +29,6 @@ class QueryStringManager(object):
             raise ValueError('QueryStringManager require a dict-like object querystring parameter')
 
         self.qs = querystring
-        self.schema = schema
 
     def _get_key_values(self, name):
         """Return a dict containing key / values items for a given key, used for items like filters, page, etc.
@@ -122,6 +119,13 @@ class QueryStringManager(object):
 
         return result
 
+    '''
+    Fields and sorting both return Schema field names, not attributes.
+    Datalayer can't use schema yet, because schema is now being defined from the result of get_object.
+    Thus we are forced to have field names == attributes. Not an issue really.
+
+    TODO Enforce this
+    '''
     @property
     def fields(self):
         """Return fields wanted by client.
@@ -139,12 +143,6 @@ class QueryStringManager(object):
         for key, value in result.items():
             if not isinstance(value, list):
                 result[key] = [value]
-
-        for key, value in result.items():
-            schema = get_schema_from_type(key)
-            for obj in value:
-                if obj not in schema._declared_fields:
-                    raise InvalidField("{} has no attribute {}".format(schema.__name__, obj))
 
         return result
 
@@ -166,11 +164,6 @@ class QueryStringManager(object):
             sorting_results = []
             for sort_field in self.qs['sort'].split(','):
                 field = sort_field.replace('-', '')
-                if field not in self.schema._declared_fields:
-                    raise InvalidSort("{} has no attribute {}".format(self.schema.__name__, field))
-                if field in get_relationships(self.schema):
-                    raise InvalidSort("You can't sort on {} because it is a relationship field".format(field))
-                field = get_model_field(self.schema, field)
                 order = 'desc' if sort_field.startswith('-') else 'asc'
                 sorting_results.append({'field': field, 'order': order})
             return sorting_results
