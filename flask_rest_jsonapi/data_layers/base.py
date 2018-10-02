@@ -79,6 +79,15 @@ class BaseDataLayer(object):
         """
         raise NotImplementedError
 
+    def replace_object(self, data, view_kwargs):
+        """Replace an object
+
+        :param dict data: the data validated by marshmallow
+        :param dict view_kwargs: kwargs from the resource view
+        :return boolean: True if object have changed else False
+        """
+        raise NotImplementedError
+
     def delete_object(self, obj, view_kwargs):
         """Delete an item through the data layer
 

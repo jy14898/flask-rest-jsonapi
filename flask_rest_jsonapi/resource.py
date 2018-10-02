@@ -315,6 +315,54 @@ class ResourceDetail(with_metaclass(ResourceMeta, Resource)):
         return result
 
     @check_method_requirements
+    def put(self, *args, **kwargs):
+        """Replace an object"""
+        json_data = request.get_json() or {}
+
+        qs = QSManager(request.args)
+        schema_kwargs = getattr(self, 'patch_schema_kwargs', dict())
+        schema_kwargs.update({'partial': True})
+
+        schema = compute_schema(self.get_schema(json_data, is_load=True),
+                                schema_kwargs,
+                                qs,
+                                qs.include)
+
+        try:
+            data, errors = schema.load(json_data)
+        except IncorrectTypeError as e:
+            errors = e.messages
+            for error in errors['errors']:
+                error['status'] = '409'
+                error['title'] = "Incorrect type"
+            return errors, 409
+        except ValidationError as e:
+            errors = e.messages
+            for message in errors['errors']:
+                message['status'] = '422'
+                message['title'] = "Validation error"
+            return errors, 422
+
+        if errors:
+            for error in errors['errors']:
+                error['status'] = "422"
+                error['title'] = "Validation error"
+            return errors, 422
+
+        if 'id' not in json_data['data']:
+            raise BadRequest('Missing id in "data" node',
+                             source={'pointer': '/data/id'})
+        if json_data['data']['id'] != str(kwargs[self.data_layer.get('url_field', 'id')]):
+            raise BadRequest('Value of id does not match the resource identifier in url',
+                             source={'pointer': '/data/id'})
+
+        obj = self._data_layer.replace_object(data, kwargs)
+
+        result = schema.dump(obj).data
+
+        return result
+
+    @check_method_requirements
     def delete(self, *args, **kwargs):
         """Delete an object"""
         self.before_delete(args, kwargs)
