@@ -175,7 +175,7 @@ class ResourceList(with_metaclass(ResourceMeta, Resource)):
 
         qs = QSManager(request.args)
 
-        schema = compute_schema(self.get_schema(json_data),
+        schema = compute_schema(self.get_schema(json_data, is_load=True),
                                 getattr(self, 'post_schema_kwargs', dict()),
                                 qs,
                                 qs.include)
@@ -271,7 +271,7 @@ class ResourceDetail(with_metaclass(ResourceMeta, Resource)):
         schema_kwargs = getattr(self, 'patch_schema_kwargs', dict())
         schema_kwargs.update({'partial': True})
 
-        schema = compute_schema(self.get_schema(json_data),
+        schema = compute_schema(self.get_schema(json_data, is_load=True),
                                 schema_kwargs,
                                 qs,
                                 qs.include)
