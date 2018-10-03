@@ -404,7 +404,7 @@ class ResourceDetail(with_metaclass(ResourceMeta, Resource)):
 
     def update_object(self, data, qs, kwargs):
         obj = self._data_layer.get_object(kwargs, qs=qs)
-        self._data_layer.update_object(obj, data, kwargs)
+        obj = self._data_layer.update_object(obj, data, kwargs)
 
         return obj
 
