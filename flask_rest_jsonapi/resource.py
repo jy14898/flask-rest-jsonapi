@@ -156,11 +156,11 @@ class ResourceList(with_metaclass(ResourceMeta, Resource)):
 
         result = schema.dump(objects).data
 
-        view_kwargs = request.view_args if getattr(self, 'view_kwargs', None) is True else dict()
+        self_url = schema.get_resource_links(result)['self']
         add_pagination_links(result,
                              objects_count,
                              qs,
-                             url_for(self.view, _external=True, **view_kwargs))
+                             self_url)
 
         result.update({'meta': {'count': objects_count}})
 
