@@ -34,17 +34,12 @@ class Schema(DefaultSchema):
         pass
 
 class Relationship(GenericRelationship):
-    def __init__(
-        self,
-        **kwargs
-    ):
-        kwargs["related_url"] = "/{}".format(kwargs['type_'])
+    def get_related_url(self, obj):
+        self.related_url = "/{}".format(self.type_)
+        self.related_url_kwargs = {'id': '<id>'} 
 
-        # isnt used but it's required for it to work
-        # we use id as it's guaranteed to exist
-        kwargs["related_url_kwargs"] = {'id': '<id>'} 
-
-        super(Relationship, self).__init__(**kwargs)
+        return super().get_related_url(obj)
+        
 
 def compute_schema(schema_cls, default_kwargs, qs, include):
     """Compute a schema around compound documents and sparse fieldsets
