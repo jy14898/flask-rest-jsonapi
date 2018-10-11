@@ -156,7 +156,7 @@ class ResourceList(with_metaclass(ResourceMeta, Resource)):
 
         result = schema.dump(objects).data
 
-        self_url = schema.get_resource_links(result)['self']
+        self_url = schema.get_top_level_links(result, many=True)['self']
         add_pagination_links(result,
                              objects_count,
                              qs,
