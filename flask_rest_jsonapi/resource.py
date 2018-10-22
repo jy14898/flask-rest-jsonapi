@@ -123,14 +123,14 @@ class Resource(MethodView):
     '''
     Here arg is either the result from get_collection/get_object, or the parsed json of a post/patch/put
     '''
-    def get_schema(self, arg=None, is_load=False):
+    def get_schema(self, arg=None, is_load=False, kwargs={}):
         try:
             if issubclass(self.schema, SchemaABC):
                 return self.schema
             else:
                 pass # raise error?
         except TypeError:
-            return self.schema(arg, is_load)
+            return self.schema(arg, is_load, kwargs)
 
 
 
@@ -149,7 +149,7 @@ class ResourceList(with_metaclass(ResourceMeta, Resource)):
         schema_kwargs = getattr(self, 'get_schema_kwargs', dict())
         schema_kwargs.update({'many': True})
 
-        schema = compute_schema(self.get_schema(objects),
+        schema = compute_schema(self.get_schema(objects, kwargs=kwargs),
                                 schema_kwargs,
                                 qs,
                                 qs.include)
@@ -175,7 +175,7 @@ class ResourceList(with_metaclass(ResourceMeta, Resource)):
 
         qs = QSManager(request.args)
 
-        schema = compute_schema(self.get_schema(json_data, is_load=True),
+        schema = compute_schema(self.get_schema(json_data, is_load=True, kwargs=kwargs),
                                 getattr(self, 'post_schema_kwargs', dict()),
                                 qs,
                                 qs.include)
@@ -251,7 +251,7 @@ class ResourceDetail(with_metaclass(ResourceMeta, Resource)):
 
         obj = self.get_object(kwargs, qs)
 
-        schema = compute_schema(self.get_schema(obj),
+        schema = compute_schema(self.get_schema(obj, kwargs=kwargs),
                                 getattr(self, 'get_schema_kwargs', dict()),
                                 qs,
                                 qs.include)
